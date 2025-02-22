@@ -6,18 +6,14 @@ export const seperateSentence = `, Always use ${sentenceEnd} at the end of sente
 
 export const language = 'Thai';
 
-export type SystemRoleKey = 'friend' | 'multiAgent';
+export type SystemRoleKey = 'friend' | 'expense';
 
 export const SystemRole: Record<SystemRoleKey, ChatCompletionMessageParam[]> = {
 	friend: [{ role: 'system', content: 'You are friendly nice friend' }],
-	multiAgent: [
+	expense: [
 		{
 			role: 'system',
-			content: `
-			You need to classify the agent:
-				1) Expense Tracker, when related with expense, income, bill, receipt. Extract memo, amount and category, get dateTimeUtc based on the conversation relative to the current date
-				2) Friend, when other conversation, response with AI generated message
-			`,
+			content: 'Extract memo, amount and category, get dateTimeUtc based on the conversation relative to the current date',
 		}
 	],
 };

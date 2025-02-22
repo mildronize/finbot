@@ -48,3 +48,5 @@ __azurite_db*__.json
 
 .logs
 .azurite
+
+.env.lumebot

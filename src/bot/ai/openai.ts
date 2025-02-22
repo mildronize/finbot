@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 import type { ChatCompletionMessageParam } from 'openai/resources';
 import { zodResponseFormat } from "openai/helpers/zod";
 import { SystemRole, CharacterRole, sentenceEnd } from './characters';
-import { multiAgentResponseSchema } from './multi-agent';
+import { expenseAgentResponseSchema } from './expense-agent';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
@@ -63,22 +63,11 @@ export class OpenAIClient {
 		return answerMode.replace('XXX', randomLimit.toString());
 	}
 
-	private parseMessage(parsedMessage: z.infer<typeof multiAgentResponseSchema> | null) {
-		let response = '';
-		// response += `type: ${parsedMessage?.agentType}\n`;
-		// response += `message: ${parsedMessage?.message}\n`;
-		// response += `amount: ${parsedMessage?.amount}\n`;
-		// response += `category: ${parsedMessage?.category}\n`;
-		// response += `dateTimeUtc: ${parsedMessage?.dateTimeUtc}\n`;
-
-		console.log(JSON.stringify(parsedMessage, null, 2));
-		if (parsedMessage?.agentType === 'Note') {
-			response = `บันทึกโน้ต: ${parsedMessage?.memo ?? parsedMessage.message + "(M)"}`;
-		} else if (parsedMessage?.agentType === 'Expense Tracker') {
-			response = `บันทึกค่าใช้จ่าย: Note ${parsedMessage.memo}, ${parsedMessage?.amount} บาท ประเภท: ${parsedMessage?.category} วันที่: ${dayjs(parsedMessage?.dateTimeUtc).format('MMMM DD, YYYY HH:mm')}`;
-		} else {
-			response = parsedMessage?.message ?? '';
+	private parseMessage(parsedMessage: z.infer<typeof expenseAgentResponseSchema> | null) {
+		if (!parsedMessage) {
+			return 'ไม่เข้าใจข้อความที่ส่งมา';
 		}
+		let response = `บันทึกค่าใช้จ่าย: Note ${parsedMessage.memo}, ${parsedMessage?.amount} บาท ประเภท: ${parsedMessage?.category} วันที่: ${dayjs(parsedMessage?.dateTimeUtc).format('MMMM DD, YYYY HH:mm')}`;
 		return response;
 	}
 
@@ -106,15 +95,11 @@ export class OpenAIClient {
 				...this.generateTextMessages(messages),
 			],
 			model: this.model,
-			response_format: zodResponseFormat(multiAgentResponseSchema, "agentType"),
+			response_format: zodResponseFormat(expenseAgentResponseSchema, "expense"),
 		});
 		// const response = chatCompletion.choices[0].message.content ?? '';
 		const parsedMessage = chatCompletion.choices[0].message.parsed;
 		const response = this.parseMessage(parsedMessage);
-		// const response = `${parsedMessage?.agentType}: ${parsedMessage?.message}`;
-		if (this.splitSentence && parsedMessage?.agentType === 'Friend') {
-			return response.split(sentenceEnd).map((sentence) => sentence.trim());
-		}
 		return [response];
 	}
 
@@ -157,9 +142,9 @@ export class OpenAIClient {
 				this.generateImageMessage(imageUrl),
 			],
 			model: 'gpt-4o',
-			response_format: zodResponseFormat(multiAgentResponseSchema, "agentType"),
+			response_format: zodResponseFormat(expenseAgentResponseSchema, "agentType"),
 		});
-		// return chatCompletion.choices[0].message.content;
+
 		const parsedMessage = chatCompletion.choices[0].message.parsed;
 		const response = this.parseMessage(parsedMessage);
 		return response;

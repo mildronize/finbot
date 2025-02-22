@@ -22,7 +22,7 @@ export function bootstrap(): {
   };
   const botApp = new BotApp({
     botToken: env.BOT_TOKEN,
-    botInfo: JSON.parse(env.BOT_INFO),
+    botInfo: env.BOT_INFO ? JSON.parse(env.BOT_INFO): undefined,
     allowUserIds: env.ALLOWED_USER_IDS,
 		protectedBot: env.PROTECTED_BOT,
     aiClient,

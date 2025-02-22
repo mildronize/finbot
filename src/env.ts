@@ -5,7 +5,7 @@ import { getErrorMessage } from '../scripts/utils/error';
 export const envSchema = z.object({
   NODE_ENV: z.string().default('production'),
   BOT_TOKEN: z.string(),
-  BOT_INFO: z.string(),
+  BOT_INFO: z.string().optional(),
   /**
    * Comma separated list of user ids
    * Accept only messages from these users
