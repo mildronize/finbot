@@ -8,6 +8,7 @@ import { AzureTable } from '../libs/azure-table';
 import { IMessageEntity, MessageEntity } from '../entities/messages';
 import { ODataExpression } from 'ts-odata-client';
 import telegramifyMarkdown from 'telegramify-markdown';
+import { NotionService } from '../services/notion-service';
 
 type BotAppContext = Context;
 
@@ -41,6 +42,7 @@ export interface BotAppOptions {
     messages: AzureTable<IMessageEntity>;
   };
   aiClient: OpenAIClient;
+	notionService: NotionService;
   botInfo?: UserFromGetMe;
   allowUserIds?: number[];
   protectedBot?: boolean;

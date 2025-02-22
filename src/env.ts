@@ -41,11 +41,11 @@ export const envSchema = z.object({
 	/**
 	 * Notion Key
 	 */
-	NOTION_KEY: z.string().optional(),
+	NOTION_KEY: z.string(),
 	/**
 	 * Notion Database ID
 	 */
-	NOTION_DATABASE_ID: z.string().optional(),
+	NOTION_DATABASE_ID: z.string(),
 });
 
 /**

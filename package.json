@@ -33,6 +33,7 @@
 	"dependencies": {
 		"@azure/data-tables": "^13.3.0",
 		"@azure/functions": "^4.6.0",
+		"@notionhq/client": "^2.2.16",
 		"dayjs": "^1.11.13",
 		"dotenv": "^16.4.7",
 		"grammy": "github:grammyjs/grammY#support-azure-v4",
@@ -43,6 +44,7 @@
 		"telegraf-middleware-console-time": "^2.1.0",
 		"telegramify-markdown": "^1.2.2",
 		"ts-odata-client": "^2.0.2",
+		"typed-notion-client": "^0.0.0-internal.5",
 		"zod": "^3.24.1",
 		"zod-validation-error": "^3.4.0"
 	}
