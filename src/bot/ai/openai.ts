@@ -84,7 +84,9 @@ export class OpenAIClient {
 		chatMode: ChatMode,
 		messages: string[],
 		previousMessages: PreviousMessage[] = [],
-	): Promise<string[]> {
+	): Promise<z.infer<typeof expenseAgentResponseSchema> & {
+		date: Date
+	}> {
 		const chatCompletion = await this.client.beta.chat.completions.parse({
 			messages: [
 				...SystemRole[character],
@@ -99,8 +101,15 @@ export class OpenAIClient {
 		});
 		// const response = chatCompletion.choices[0].message.content ?? '';
 		const parsedMessage = chatCompletion.choices[0].message.parsed;
-		const response = this.parseMessage(parsedMessage);
-		return [response];
+		// const response = this.parseMessage(parsedMessage);
+		// return { messages: [response] }
+		return {
+			memo: parsedMessage?.memo,
+			date: dayjs(parsedMessage?.dateTimeUtc).toDate(),
+			amount: parsedMessage?.amount,
+			category: parsedMessage?.category,
+			dateTimeUtc: parsedMessage?.dateTimeUtc,
+		}
 	}
 
 	private generateSystemMessages(messages: string[]) {
