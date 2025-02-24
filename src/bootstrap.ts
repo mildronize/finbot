@@ -9,6 +9,7 @@ import { Bot } from 'grammy';
 import { generateUpdateMiddleware } from 'telegraf-middleware-console-time';
 import { Client as NotionClient } from '@notionhq/client';
 import { NotionService } from './services/notion-service';
+import { AzureOpenAI } from 'openai';
 
 const env = getEnv(process.env);
 
@@ -16,7 +17,14 @@ export function bootstrap(): {
   bot: Bot;
   asyncTask: () => Promise<void>;
 } {
-  const aiClient = new OpenAIClient(env.OPENAI_API_KEY);
+	// For Demo Purpose Only, Azure Don't Recommend to use the API Key
+	// See: https://learn.microsoft.com/en-us/azure/ai-services/openai/chatgpt-quickstart?tabs=command-line%2Capi-key%2Ctypescript-keyless%2Cpython-new&pivots=programming-language-javascript
+  const aiClient = new OpenAIClient(new AzureOpenAI({
+		endpoint: env.AZURE_OPENAI_ENDPOINT,
+		apiKey: env.AZURE_OPENAI_API_KEY,
+		apiVersion: '2024-08-01-preview',
+		deployment: 'gpt-4o-mini'
+	}));
 	const notionClient = new NotionClient({ auth: env.NOTION_KEY });
 	const notionService = new NotionService(notionClient, env.NOTION_DATABASE_ID);
   const azureTableClient = {

@@ -27,7 +27,6 @@ export type ChatMode = 'natural' | 'default';
 
 export class OpenAIClient {
 	characterRole: keyof typeof CharacterRole;
-	client: OpenAI;
 	model: string = 'gpt-4o-mini';
 	timeout: number = 20 * 1000; // 20 seconds, default is 10 minutes (By OpenAI)
 	/**
@@ -48,8 +47,8 @@ export class OpenAIClient {
 	 */
 	splitSentence: boolean = true;
 
-	constructor(apiKey: string) {
-		this.client = new OpenAI({ apiKey, timeout: this.timeout });
+	constructor(public readonly client: OpenAI) {
+		// this.client = new OpenAI({ apiKey, timeout: this.timeout });
 		this.characterRole = 'Riko';
 	}
 
