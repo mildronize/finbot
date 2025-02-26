@@ -168,17 +168,22 @@ export class BotApp {
 			await ctx.reply(t.sorryICannotUnderstand);
 			return;
 		}
-		await notionService.saveNewExpense({
-			amount: response.amount ?? 0,
-			category: response.category ?? '',
-			date: response.date,
-			memo: response.memo ?? '',
-		});
 		const replyMessage = parseExpenseMessage(response);
-		await ctx.reply(replyMessage);
+		if (response.agent === 'ExpenseTracker') {
+			await ctx.reply(replyMessage);
+			await notionService.saveNewExpense({
+				amount: response.amount ?? 0,
+				category: response.category ?? '',
+				date: response.date,
+				memo: response.memo ?? '',
+			});
+			await ctx.reply('บันทึกลง Notion แล้ว');
+		} else {
+			await ctx.reply(response.message ?? t.sorryICannotUnderstand);
+		}
 		await azureTableMessageClient.insert(
 			await new MessageEntity({
-				payload: replyMessage,
+				payload: response.agent === 'ExpenseTracker' ? replyMessage : response.message ?? t.sorryICannotUnderstand,
 				userId: String(ctx.from?.id),
 				senderId: String(ctx.from?.id),
 				type: 'text',
@@ -282,21 +287,27 @@ export class BotApp {
 		previousMessage.reverse();
 		// Step 3: Chat with AI
 		const response = await aiClient.chat('expense', chatMode, [incomingMessage], previousMessage);
-		await notionService.saveNewExpense({
-			amount: response.amount ?? 0,
-			category: response.category ?? '',
-			date: response.date,
-			memo: response.memo ?? '',
-		});
 		const replyMessage = parseExpenseMessage(response);
-		await ctx.reply(replyMessage);
+		if (response.agent === 'ExpenseTracker') {
+			await ctx.reply(replyMessage);
+			await notionService.saveNewExpense({
+				amount: response.amount ?? 0,
+				category: response.category ?? '',
+				date: response.date,
+				memo: response.memo ?? '',
+			});
+			await ctx.reply('บันทึกลง Notion แล้ว');
+		} else {
+			await ctx.reply(response.message ?? t.sorryICannotUnderstand);
+		}
+
 		await azureTableMessageClient.insert(
-		  await new MessageEntity({
-		    payload: replyMessage,
-		    userId: String(ctx.from?.id),
-		    senderId: String(0),
-		    type: 'text',
-		  }).init(),
+			await new MessageEntity({
+				payload: response.agent === 'ExpenseTracker' ? replyMessage : response.message ?? t.sorryICannotUnderstand,
+				userId: String(ctx.from?.id),
+				senderId: String(0),
+				type: 'text',
+			}).init(),
 		);
 		// let countNoResponse = 0;
 		// for (const message of response) {

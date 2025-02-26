@@ -111,8 +111,11 @@ export class OpenAIClient {
 
 		const parsedMessage = chatCompletion.choices[0].message.parsed;
 
+		console.log('parsedMessage', parsedMessage);
 
 		return {
+			agent: parsedMessage?.agent ?? 'Default',
+			message: parsedMessage?.message,
 			memo: parsedMessage?.memo,
 			date: dayjs(parsedMessage?.dateTimeUtc).toDate(),
 			amount: parsedMessage?.amount,
@@ -166,6 +169,8 @@ export class OpenAIClient {
 		const parsedMessage = chatCompletion.choices[0].message.parsed;
 		// const response = this.parseMessage(parsedMessage);
 		return {
+			message: parsedMessage?.message,
+			agent: parsedMessage?.agent ?? 'Default',
 			memo: parsedMessage?.memo,
 			date: dayjs(parsedMessage?.dateTimeUtc).toDate(),
 			amount: parsedMessage?.amount,
