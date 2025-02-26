@@ -24,7 +24,15 @@ export const envSchema = z.object({
 	 *
 	 * @default true
 	 */
-	PROTECTED_BOT: z.boolean().default(true),
+	PROTECTED_BOT: z.preprocess(
+		(val: unknown) => {
+			if (typeof val === 'string') {
+				return val.toLowerCase() === 'true';
+			}
+			return Boolean(val);
+		},
+		z.boolean()
+	).default(true),
 	/**
 	 * OpenAI API Key
 	 */

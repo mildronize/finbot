@@ -2,7 +2,7 @@ import { Bot, Context } from 'grammy';
 import type { UserFromGetMe } from 'grammy/types';
 
 import { authorize } from '../middlewares/authorize';
-import { ChatMode, OpenAIClient, PreviousMessage } from './ai/openai';
+import { ChatAiResponse, ChatMode, OpenAIClient, parseExpenseMessage, PreviousMessage } from './ai/openai';
 import { t } from './languages';
 import { AzureTable } from '../libs/azure-table';
 import { IMessageEntity, MessageEntity } from '../entities/messages';
@@ -139,6 +139,7 @@ export class BotApp {
 	private async handlePhoto(
 		ctx: BotAppContext,
 		aiClient: OpenAIClient,
+		notionService: NotionService,
 		azureTableMessageClient: AzureTable<IMessageEntity>,
 		photo: { photoUrl: string; caption?: string },
 	) {
@@ -162,21 +163,29 @@ export class BotApp {
 				type: 'photo',
 			}).init(),
 		);
-		const message = await aiClient.chatWithImage('expense', incomingMessages, photo.photoUrl);
-		if (!message) {
+		const response = await aiClient.chatWithImage('expense', incomingMessages, photo.photoUrl);
+		if (!response) {
 			await ctx.reply(t.sorryICannotUnderstand);
 			return;
 		}
-		await ctx.reply(message);
+		await notionService.saveNewExpense({
+			amount: response.amount ?? 0,
+			category: response.category ?? '',
+			date: response.date,
+			memo: response.memo ?? '',
+		});
+		const replyMessage = parseExpenseMessage(response);
+		await ctx.reply(replyMessage);
 		await azureTableMessageClient.insert(
 			await new MessageEntity({
-				payload: message,
+				payload: replyMessage,
 				userId: String(ctx.from?.id),
 				senderId: String(ctx.from?.id),
 				type: 'text',
 			}).init(),
 		);
 	}
+
 
 	private async allMessagesHandler(
 		ctx: Context,
@@ -202,7 +211,7 @@ export class BotApp {
 
 		if (messages.photo) {
 			const photoUrl = telegram.getFileUrl(messages.photo);
-			await this.handlePhoto(ctx, aiClient, azureTableMessageClient, { photoUrl: photoUrl, caption: incomingMessage });
+			await this.handlePhoto(ctx, aiClient, notionService, azureTableMessageClient, { photoUrl: photoUrl, caption: incomingMessage });
 			return;
 		}
 		if (!incomingMessage || ctx.from?.id === undefined) {
@@ -279,15 +288,16 @@ export class BotApp {
 			date: response.date,
 			memo: response.memo ?? '',
 		});
-		await ctx.reply('บันทึกแล้ว');
-		// await azureTableMessageClient.insert(
-		//   await new MessageEntity({
-		//     payload: response.messages.join(' '),
-		//     userId: String(ctx.from?.id),
-		//     senderId: String(0),
-		//     type: 'text',
-		//   }).init(),
-		// );
+		const replyMessage = parseExpenseMessage(response);
+		await ctx.reply(replyMessage);
+		await azureTableMessageClient.insert(
+		  await new MessageEntity({
+		    payload: replyMessage,
+		    userId: String(ctx.from?.id),
+		    senderId: String(0),
+		    type: 'text',
+		  }).init(),
+		);
 		// let countNoResponse = 0;
 		// for (const message of response) {
 		//   if (!message) {

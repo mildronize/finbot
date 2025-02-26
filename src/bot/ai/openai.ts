@@ -18,6 +18,19 @@ export interface PreviousMessage {
 	content: string;
 }
 
+export type ChatAiResponse = z.infer<typeof expenseAgentResponseSchema> & {
+	date: Date
+}
+
+export function parseExpenseMessage(parsedMessage: ChatAiResponse | null) {
+	if (!parsedMessage) {
+		return 'ไม่เข้าใจข้อความที่ส่งมา';
+	}
+	let response = `บันทึกค่าใช้จ่าย: Note ${parsedMessage.memo}, ${parsedMessage?.amount} บาท ประเภท: ${parsedMessage?.category} วันที่: ${dayjs(parsedMessage.date).format('MMMM DD, YYYY HH:mm')}`;
+	return response;
+}
+
+
 /**
  * The character role of the agent
  * natural: the agent will answer not too long, not too short
@@ -83,25 +96,22 @@ export class OpenAIClient {
 		chatMode: ChatMode,
 		messages: string[],
 		previousMessages: PreviousMessage[] = [],
-	): Promise<z.infer<typeof expenseAgentResponseSchema> & {
-		date: Date
-	}> {
+	): Promise<ChatAiResponse> {
 		const chatCompletion = await this.client.beta.chat.completions.parse({
 			messages: [
 				...SystemRole[character],
 				...CharacterRole[this.characterRole],
 				...this.generateSystemMessages([`Current Date (UTC): ${dayjs().toISOString()}`]),
-				// ...(chatMode === 'natural' ? this.generateSystemMessages([this.dynamicLimitAnswerSentences(3, 5)]) : []),
 				...this.generatePreviousMessages(previousMessages),
 				...this.generateTextMessages(messages),
 			],
 			model: this.model,
 			response_format: zodResponseFormat(expenseAgentResponseSchema, "expense"),
 		});
-		// const response = chatCompletion.choices[0].message.content ?? '';
+
 		const parsedMessage = chatCompletion.choices[0].message.parsed;
-		// const response = this.parseMessage(parsedMessage);
-		// return { messages: [response] }
+
+
 		return {
 			memo: parsedMessage?.memo,
 			date: dayjs(parsedMessage?.dateTimeUtc).toDate(),
@@ -154,7 +164,13 @@ export class OpenAIClient {
 		});
 
 		const parsedMessage = chatCompletion.choices[0].message.parsed;
-		const response = this.parseMessage(parsedMessage);
-		return response;
+		// const response = this.parseMessage(parsedMessage);
+		return {
+			memo: parsedMessage?.memo,
+			date: dayjs(parsedMessage?.dateTimeUtc).toDate(),
+			amount: parsedMessage?.amount,
+			category: parsedMessage?.category,
+			dateTimeUtc: parsedMessage?.dateTimeUtc,
+		}
 	}
 }

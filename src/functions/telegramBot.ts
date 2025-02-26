@@ -12,3 +12,4 @@ app.http('telegramBot', {
     return webhookCallback(bot, 'azure-v4')(request as any);
   },
 });
+
