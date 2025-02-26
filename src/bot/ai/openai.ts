@@ -62,7 +62,7 @@ export class OpenAIClient {
 
 	constructor(public readonly client: OpenAI) {
 		// this.client = new OpenAI({ apiKey, timeout: this.timeout });
-		this.characterRole = 'Riko';
+		this.characterRole = 'Krati';
 	}
 
 	/**

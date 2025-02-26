@@ -23,7 +23,8 @@ export function bootstrap(): {
 		endpoint: env.AZURE_OPENAI_ENDPOINT,
 		apiKey: env.AZURE_OPENAI_API_KEY,
 		apiVersion: '2024-08-01-preview',
-		deployment: 'gpt-4o-mini'
+		deployment: 'gpt-4o-mini',
+		timeout: 20 * 1000,
 	}));
 	const notionClient = new NotionClient({ auth: env.NOTION_KEY });
 	const notionService = new NotionService(notionClient, env.NOTION_DATABASE_ID);
